@@ -1,7 +1,6 @@
-install.packages("tidyverse")
-install.packages('nycflights13')
 library(tidyverse)
 library(nycflights13)
+library(ggridges)
 
 #Histogramas----
 agrupado<-group_by(flights, carrier)
@@ -47,7 +46,7 @@ aerolinea_filtrada<-mutate(aerolinea_filtrada, t_ganado = dep_delay-arr_delay)
 enero_julio<-filter(aerolinea_filtrada, mes_cat %in% list('julio','diciembre'))
 ggplot(enero_julio, aes(x=dep_delay, fill=mes_cat))+geom_histogram(alpha=0.7)+labs(title='Retrasos de partida', subtitle='de la aerolínea EV durante los meses de Julio y Diciembre', x='Retraso de partida (min)', y='')+xlim(-20, +70)
 #-----
-recuperacion<- mutate(aerolinea1, T_recuperado = dep_delay-arr_delay) 
+recuperacion<- mutate(aerolinea_filtrada, T_recuperado = dep_delay-arr_delay) 
 ggplot(recuperacion, aes(x=T_recuperado))+geom_histogram()+labs(title='tiempo recuperdao en el aire', subtitle='EV', x='recuperacion (min)', y='Cantidad de vuelos')+xlim(-50, +50)
 demora_llegada<-vector()
 tiempo_ganado<-vector()
@@ -58,22 +57,34 @@ fecha<- mutate(fecha, T_recuperado = dep_delay-arr_delay)
 for (i in 1:12){
   mes<-filter(fecha, month==i)  
   demora_llegada <- append(demora_llegada, summarize(mes, mean(arr_delay, na.rm=TRUE)))
+  
   tiempo_ganado<- append(tiempo_ganado, summarize(mes, mean(T_recuperado, na.rm=TRUE)))
   
 }
-fecha$mes_cat<-as.factor(ifelse(fecha['month']==1, 'enero', 
-                          ifelse(fecha['month']==2, 'febrero', 
-                          ifelse(fecha['month']==3,  'marzo',
-                          ifelse(fecha['month']==4,  'abril',
+fecha$mes_cat<-as.factor(ifelse(fecha['month']==1, 'ene', 
+                          ifelse(fecha['month']==2, 'feb', 
+                          ifelse(fecha['month']==3,  'mar',
+                          ifelse(fecha['month']==4,  'abr',
                           ifelse(fecha['month']==5,  'mayo',
-                          ifelse(fecha['month']==6,  'junio',
-                          ifelse(fecha['month']==7,  'julio',
-                          ifelse(fecha['month']==8,  'agosto',
-                          ifelse(fecha['month']==9,  'septiembre',
-                          ifelse(fecha['month']==10,  'octubre',
-                          ifelse(fecha['month']==11,'noviembre', 'diciembre')))))))))))) 
-tabla<-summarise(fecha, demora_llegada=mean(arr_delay, na.rm=TRUE), tiempo_ganado=mean(T_recuperado, na.rm=TRUE))
+                          ifelse(fecha['month']==6,  'jun',
+                          ifelse(fecha['month']==7,  'jul',
+                          ifelse(fecha['month']==8,  'ago',
+                          ifelse(fecha['month']==9,  'sep',
+                          ifelse(fecha['month']==10,  'oct',
+                          ifelse(fecha['month']==11,'nov', 'dic'))))))))))))
+tabla<-summarise(fecha, 
+                 demora_llegada=mean(arr_delay, na.rm=TRUE),
+                 dll_sd=sd(arr_delay, na.rm=TRUE), 
+                 dll_median=median(arr_delay, na.rm=TRUE),
+                 dll_iqr=IQR(arr_delay, na.rm=TRUE),
+                 tiempo_ganado=mean(T_recuperado, na.rm=TRUE),
+                 tg_sd=sd(T_recuperado, na.rm=TRUE), 
+                 tg_median=median(T_recuperado, na.rm=TRUE),
+                 tg_iqr=IQR(arr_delay, na.rm=TRUE)
+                 )
 
 #histogramas de demoras----
-df_demoras<-filter(fecha, mes_cat=='noviembre')
-ggplot(df_demoras, aes(x=arr_delay))+geom_histogram()+xlim(-100,200)
+ggplot(fecha, aes(x=T_recuperado, y=factor(month)))+geom_violin(draw_quantiles = c(0.25, 0.5, 0.75))+xlim(-100,200)+
+coord_flip()+ labs(title='Tiempo recuperado en aire en función del mes', subtitle='para la aerolínea EV', y='Mes del año', x='Tiempo de demora(min)')+xlim(-100, 100)
+#Métricas estadísticas en "Tabla"----
+ggplot(tabla, aes(x=factor(month), y=demora_llegada))+geom_point()+geom_line()

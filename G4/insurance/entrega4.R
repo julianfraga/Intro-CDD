@@ -1,7 +1,7 @@
 library(tidyverse)
 library(ggridges)
 library(dplyr)
-df_seguros<-read.csv(file='D:/Documentos/UNSAM/Intro CDD/G4/Insurance.csv',dec=",")
+df_seguros<-read.csv(file='D:/Documentos/UNSAM/Intro CDD/G4/insurance/Insurance.csv',dec=",")
 
 #la lista de regiones
 regiones <- unique(df_seguros['region']) #esto es un dataframe, ojo

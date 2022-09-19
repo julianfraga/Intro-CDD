@@ -72,6 +72,33 @@ serie_a<-filter(serie_a, name=='Serie A')
 goles_jugador<-appearances %>% ungroup()%>% group_by(playerID) %>% filter(goals>0) %>% right_join(serie_a, by="gameID")
 goleadores<-goles_jugador %>% summarise(playerID, goles=sum(goals)) %>% unique() %>% left_join(players, by='playerID')
 
+goleadores<-arrange(goleadores$goles, decreasing=TRUE)
+nombres_topfive<-c('Ciro Immobile','Gonzalo Higua<ed>n','Fabio Quagliarella','Mauro Icardi','Andrea Belotti')
+id_topfive<-c(1209,1230,1293,1513,1186)
+topfive<-subset(goleadores, goleadores$playerID %in% id_topfive)
+goles_topfive <- subset(shots, shooterID %in% id_topfive) %>% 
+    filter(shotResult=='Goal') %>%
+    left_join(players, by=c('shooterID'='playerID')) %>%
+    group_by(name)
+#MIRÁ LA VUELTA QUE TENGO QUE HACER PORQUE A R NO LE GUSTAN LOS CARACTERES ESPECIALES
+goles_topfive$name[goles_topfive$shooterID==1293]<-'Gonzalo Higuain'
+ 
+unique(goles_topfive$name)
+ggplot(data = goles_topfive, aes(x=minute)) +
+  geom_density_ridges(aes(y=name), alpha=0.7)+
+  labs(title="Goles anotados - Serie A temporadas '14 a '20",x ="Tiempo de partido (min)", y='Jugador')
+
+#(goles_topfive, aes(x=minute, y=factor(name)))+geom_violin(draw_quantiles = c(0.25, 0.5, 0.75))+
+ # coord_flip()
+
+metricas <-goles_topfive%>% group_by(name) %>% 
+  summarise(media=mean(minute),desviacion=sd(minute), mediana=median(minute), IQR=IQR(minute))
+
+metricas_pt <-filter(goles_topfive, minute<=45)%>% group_by(name) %>% 
+  summarise(media=mean(minute),desviacion=sd(minute), mediana=median(minute), IQR=IQR(minute))
+metricas_st <-filter(goles_topfive, minute>45)%>% group_by(name) %>% 
+  summarise(media=mean(minute),desviacion=sd(minute), mediana=median(minute), IQR=IQR(minute))
+
 #----
 #Espacio de prueba
 goles<-shots%>% filter(shotResult=='Goal') %>% left_join(teamstats,by='gameID',all.x=TRUE) 

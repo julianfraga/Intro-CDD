@@ -1,6 +1,7 @@
 library(tidyverse)
 library(ggridges)
 library(dplyr)
+
 appearances<-read.csv(file='D:/Documentos/UNSAM/Intro CDD/G4/furbo/appearances.csv',dec=",")
 games<-read.csv(file='D:/Documentos/UNSAM/Intro CDD/G4/furbo/games.csv',dec=",")
 leagues<-read.csv(file='D:/Documentos/UNSAM/Intro CDD/G4/furbo/leagues.csv',dec=",")
@@ -28,16 +29,27 @@ goles_equipo<-teamstats %>% ungroup()%>% group_by(teamID) %>% filter(goals>0) %>
 goles_equipo<-ungroup(goles_equipo) %>% group_by(teamID)
 tally<-goles_equipo %>% summarise(teamID, goles=sum(goals)) %>% unique()
 
-
 teams<-left_join(teams, tally)
 n<-10/nrow(teams)
 top_ten<-teams[teams$goles > quantile(teams$goles,prob=1-n),]
+
+shots_equipo<-teamstats %>% ungroup()%>% group_by(teamID) %>% filter(shots>0) %>% left_join(teams, by="teamID")
+tally_shots<-shots_equipo %>% summarize(teamID, shots=sum(shots)) %>% unique()
+teams<-left_join(teams, tally_shots)
+top_ten<-teams[teams$shots > quantile(teams$shots,prob=1-n),]
 
 ggplot(top_ten, aes(x=reorder(name, -goles), y=goles))+
   geom_bar(stat="Identity", width=0.6,fill='steelblue')+
   geom_text(aes(label=goles), vjust=1.6, color="white")+
   theme(axis.text.x = element_text(angle = 60, hjust=1))+
   xlab('Equipo')+ylab('Goles')+ggtitle('Goles totales durante las temporadas 2014-2020')
+
+ggplot(top_ten, aes(x=reorder(name, -shots), y=shots))+
+  geom_bar(stat="Identity", width=0.8,fill='steelblue')+
+  geom_text(aes(label=shots), vjust=1.6, color="white")+
+  theme(axis.text.x = element_text(angle = 60, hjust=1))+
+  xlab('Equipo')+ylab('Tiros al arco')+ggtitle('Tiros al arco durante las temporadas 2014-2020')
+
 #----
 #busco tiros al arco rival por equipo
 colnames(teamstats)

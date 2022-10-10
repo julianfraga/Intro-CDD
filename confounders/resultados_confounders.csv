@@ -1,0 +1,5 @@
+Categoria,Pendiente,pendienteSd,Ordenada,ordenadaSD,RCuad,pval
+FumadorBMI>=30,281.15,26.25,30558.13,1093.04,4.413, < 2.2e-16
+FumadorBMI<30,260.64      ,23.99   ,11503.36     ,962.92   ,4.777, < 2.2e-16
+No FumadorBMI>=30,267.39      ,13.88,-2029.05     ,598.59,3.976, < 2.2e-16
+No FumadorBMI<30, 265.95     ,15.12,-2118.37     ,609.43,3.811, 2.2e-16

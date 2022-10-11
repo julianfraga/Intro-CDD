@@ -33,10 +33,11 @@ grid.arrange(p1, p2, ncol = 2)
 
 
 
-df <- filter(df_completo, df_completo$smoker=='yes'&df_completo$bmi>=30)
+df <- filter(df_completo, df_completo$smoker=='no'&df_completo$bmi>=30)
 #df<- df_completo
 modelin<- lm(charges~age, data=df)
 summary(modelin)
+
 grid<-data_grid(df, charges)
 
 
@@ -50,8 +51,11 @@ ggplot(grid, aes(x=age))+geom_point(aes(y=charges))+
 
 
 grid<- add_residuals(df, modelin)
-ggplot(data = grid)+geom_point(aes(x=age, y=resid))
+ggplot(data = grid)+geom_point(aes(x=age, y=resid))+
+labs(title='Residuos del ajuste sobre población total')+xlab('Edad')+ 
+  ylab('Gasto médico anual')
 
+plot(modelin)
 #----
 resultados <- read.csv(file='D:/Documentos/UNSAM/Intro CDD/confounders/resultados_confounders.csv',dec=",")%>% drop_na()
 resultados$Categoria=as.factor(resultados$Categoria)

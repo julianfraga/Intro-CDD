@@ -2,13 +2,16 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-os.chdir(r'D:\Documentos\UNSAM\Intro CDD\G1')
-cwd= os.getcwd()
+
 #%%
-df_raw=pd.read_excel('insurance.xlsx')
+df_raw=pd.read_excel(r'D:\Documentos\UNSAM\Intro CDD\G1\insurance.xlsx')
 df= df_raw.dropna()
 df.head(10)
 columns=list(df.columns)
+#%%
+plt.scatter(df['age'], df['charges'])
+plt.xlabel('Edad')
+plt.ylabel('Gastos médicos anuales en U$D')
 #%%
 df['sex'].unique()
 mujeres=df.groupby('sex').get_group('female')

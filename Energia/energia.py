@@ -23,8 +23,8 @@ def ajuste_region(df, nom_region,col_region='region',col_iso='iso_code', x='year
     data = region[[col_iso, x, y]]
     ajustes = []
     
-    if plot:
-        plt.clf()
+    # if plot:
+    #     plt.clf()
 
     for iso in pd.unique(region[col_iso]):
         data_ = data[ data[col_iso] == iso ]
@@ -73,9 +73,10 @@ def to_csv(lista,nombre, lista_de_diccionarios=True, tiene_header=True):
         writer.writerows(lista)
 
 #%%
-df_energia = pd.read_csv('WorldEnergyConsumption.csv')
-df=df_energia[['iso_code', 'year', 'renewables_share_elec']]
-df.dropna(inplace=True)
+df_energia = pd.read_csv('World Energy Consumption.csv')
+df=df_energia[['iso_code', 'year', 'renewables_share_energy',  'renewables_share_elec', 'nuclear_share_elec', 'nuclear_share_energy', 'renewables_consumption','electricity_generation']]
+
+# df.dropna(inplace=True)
 
 iso_regiones = pd.read_csv('iso_3_continents.csv')
 iso_regiones = iso_regiones.rename(columns={'alpha-3':'iso_code'})
@@ -86,6 +87,53 @@ df= pd.merge(df, iso_regiones, on='iso_code', how='left')
 
 for region in pd.unique(df['region']):
     if type(region)==str:
-        ajustes=ajuste_region(df, nom_region=region, plot=True)
-        to_csv(ajustes, 'ajuste_'+region)
+        ajustes=ajuste_region(df, nom_region=region)
+        # to_csv(ajustes, 'ajuste_'+region)
 
+#%%
+ini, mid, fin = 1985, 1997, 2020
+fechas=[ini, mid, fin]
+top_5= ['GRB', 'FRA', 'DEU', 'RUS', 'ITA']
+df=df[df['iso_code'].isin(top_5)]
+df=df[df['year']>=ini]
+df_pre=df[df['year']<=mid]
+df_post=df[df['year']>=mid]
+ajuste_region(df_pre, nom_region='Europe', plot=True)
+ajuste_region(df_post, nom_region='Europe', plot=True)
+#%%
+df_energia = pd.read_csv('World Energy Consumption.csv')
+df=df_energia[['iso_code', 'year', 'low_carbon_electricity', 'electricity_generation', 'low_carbon_share_elec']]
+df.dropna(inplace=True)
+df=df[df.iso_code !='OWID_WRL']
+df=df.rename(columns={'low_carbon_share_elec':'lce_share'})
+
+columnas=['iso_code', 'low_carbon_electricity', 'electricity_generation', 'year']
+df_sum=df[columnas[:-1]].groupby(['iso_code']).sum()
+df_sum['lce_share']=df_sum['low_carbon_electricity']/df_sum['electricity_generation']*100
+
+df_sum_anual=df[columnas[1:]].groupby(['year']).sum()
+df_sum_anual['lce_share']=df_sum_anual['low_carbon_electricity']/df_sum_anual['electricity_generation']*100
+
+productores=df_sum.sort_values('electricity_generation',ascending = False).head(20)
+
+verdes=df_sum.sort_values(['low_carbon_electricity','lce_share'],ascending = False).head(10)
+#%%
+
+
+def modelo(x, x_0, b, c):
+    y= 1/(1+np.exp(-b*(x-x_0)))+c
+    return y
+
+anos=np.arange(1985,2050)
+
+df_elec=df_sum_anual['electricity_generation']
+df_lowca=df_sum_anual['low_carbon_electricity']
+maximo=max(df_elec)
+
+plt.plot(anos, modelo(anos,2030, 0.059)+0.05, label='prediccion a ojimetro')
+plt.plot(df_elec/maximo, label='producción total')
+plt.plot(df_lowca/maximo, label='producción de verde')
+plt.grid()
+plt.legend()
+plt.xlabel('Año')
+plt.ylabel('Producción energética anual normalizada sobre el máximo producido')
